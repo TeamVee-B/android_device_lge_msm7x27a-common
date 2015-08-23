@@ -18,9 +18,8 @@ $(call inherit-product, device/common/gps/gps_us_supl.mk)
 
 DEVICE_PACKAGE_OVERLAYS += device/lge/msm7x27a-common/overlay
 
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/init.lge-shared.rc:root/init.lge-shared.rc \
-    $(LOCAL_PATH)/init.lge.usb.rc:root/init.lge.usb.rc
+# Rootdir files
+PRODUCT_COPY_FILES += $(call find-copy-subdir-files,*,device/lge/msm7x27a-common/rootdir,root)
 
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/recovery/postrecoveryboot.sh:recovery/root/sbin/postrecoveryboot.sh
@@ -36,8 +35,6 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/audio_policy.conf::system/etc/audio_policy.conf \
     $(LOCAL_PATH)/configs/wpa_supplicant_overlay.conf:system/etc/wifi/wpa_supplicant_overlay.conf \
     $(LOCAL_PATH)/configs/p2p_supplicant_overlay.conf:system/etc/wifi/p2p_supplicant_overlay.conf \
-    $(LOCAL_PATH)/configs/init.lge.target.sh:system/etc/init.lge.target.sh \
-    $(LOCAL_PATH)/configs/init.qcom.baseband.sh:system/etc/init.qcom.baseband.sh
 
 # SoftAP
 PRODUCT_COPY_FILES += \

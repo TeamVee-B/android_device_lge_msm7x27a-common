@@ -175,12 +175,10 @@ on post-fs-data
     setprop vold.post_fs_data_done 1
 
 on boot
-   start qcamerasvr
+    write /proc/sys/vm/page-cluster 0
+    write /proc/sys/vm/swappiness 100
 
-   write /proc/sys/vm/page-cluster 0
-   write /proc/sys/vm/swappiness 100
-
-   # bluetooth
+    # bluetooth
     chown bluetooth bluetooth /sys/module/bluetooth_power/parameters/power
     chown bluetooth bluetooth /sys/class/rfkill/rfkill0/type
     chown bluetooth bluetooth /sys/class/rfkill/rfkill0/state
@@ -200,7 +198,7 @@ on boot
     chmod 0660 /dev/ttyHS2
     chown bluetooth bluetooth /dev/ttyHS2
 
-   #port-bridge
+    #port-bridge
     chmod 0660 /dev/smd0
     chown system system /dev/smd0
 
@@ -212,7 +210,7 @@ on boot
     # Change owner and group for media server and surface flinger
     chown media system /sys/devices/virtual/graphics/fb1/format_3d
 
-   # Change permissions for fps_level nodes
+    # Change permissions for fps_level nodes
     chown system graphics /sys/class/graphics/fb0/msm_fb_fps_level
     chown system graphics /sys/class/graphics/fb1/msm_fb_fps_level
     chown system graphics /sys/class/graphics/fb2/msm_fb_fps_level
@@ -223,7 +221,7 @@ on boot
     #For netmgr daemon to inform the USB driver of the correct transport
     chown radio radio /sys/class/usb_composite/rmnet_smd_sdio/transport
 
-   #Create QMUX deamon socket area
+    #Create QMUX deamon socket area
     mkdir /dev/socket/qmux_radio 0770 radio radio
     chmod 2770 /dev/socket/qmux_radio
     mkdir /dev/socket/qmux_audio 0770 media audio
@@ -277,7 +275,7 @@ on boot
     chmod 0664 /sys/class/leds/lcd-backlight/alc
     chown system system /sys/class/leds/lcd-backlight/alc
     chmod 0664 /sys/class/leds/lcd-backlight/brightness
-# rmt-storage
+    # rmt-storage
     chown system system /sys/devices/platform/rs300000a7.65536/send_sync
     chmod 0764 /sys/devices/platform/rs300000a7.65536/send_sync
 
@@ -292,7 +290,7 @@ on boot
     chown system /sys/devices/platform/rs300100a7.65536/sync_sts
     #chown system /sys/devices/system/cpu/cpufreq/ondemand/io_is_busy
 
-# smartass governor boostpulse
+    # smartass governor boostpulse
     chown system system /sys/devices/system/cpu/cpufreq/smartass/boost_pulse
     chown system system /sys/devices/system/cpu/cpufreq/smartassH3/boost_pulse
     chmod 0660 /sys/devices/system/cpu/cpufreq/smartass/boost_pulse
@@ -306,19 +304,15 @@ on boot
     chmod 0664 /sys/class/leds/button-backlight/max_brightnes
     restorecon /sys/class/leds/button-backlight/max_brightnes
 
-#start camera server as daemon
-service qcamerasvr /system/bin/mm-qcamera-daemon
-        class late_start
-        user camera
-        group camera system inet audio
+    start qcamerasvr
 
-service ril-daemon1 /system/bin/rild -c 1
-    class main
-    socket rild1 stream 660 root radio
-    socket rild-debug1 stream 660 radio system
-    user root
-    disabled 
-    group radio cache inet misc audio sdcard_r sdcard_rw qcom_oncrpc diag qcom_diag log
+    start bbset
+
+# start camera server as daemon
+service qcamerasvr /system/bin/mm-qcamera-daemon
+    class late_start
+    user camera
+    group camera system inet audio
 
 service sdcard /system/bin/sdcard -u 1023 -g 1023 -l /data/media /mnt/shell/emulated
     class late_start
@@ -327,10 +321,6 @@ service sdcard /system/bin/sdcard -u 1023 -g 1023 -l /data/media /mnt/shell/emul
 service fuse_sdcard1 /system/bin/sdcard -u 1023 -g 1023 -d /mnt/media_rw/sdcard1 /storage/sdcard1
      class late_start
      disabled
-
-service fuse_usbdisk /system/bin/sdcard -u 1023 -g 1023 -d /mnt/media_rw/usbdisk /storage/usbdisk
-    class late_start
-    disabled
 
 on property:ro.fuse_sdcard=true
     start sdcard
@@ -366,9 +356,10 @@ service bugreport /system/bin/logwrapper /system/bin/dumpstate -d -v -o /storage
     disabled
     oneshot
 
-service bbset /system/bin/sh /system/etc/init.qcom.baseband.sh
-     class late_start
-     oneshot
+service bbset /system/bin/sh /init.qcom.baseband.sh
+    class late_start
+    disabled
+    oneshot
 
 ## WLAN
 service p2p_supplicant /system/bin/logwrapper /system/bin/wpa_supplicant \
