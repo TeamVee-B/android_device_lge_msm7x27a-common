@@ -174,16 +174,6 @@ on post-fs-data
 
     setprop vold.post_fs_data_done 1
 
-on early-boot
-   start targetprop-set
-
-service targetprop-set /system/bin/sh /system/etc/init.lge.target.sh
-    class late_start
-    user root
-    critical
-    disabled
-    oneshot
-
 on boot
    start qcamerasvr
 
