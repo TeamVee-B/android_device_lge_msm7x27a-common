@@ -1,74 +1,41 @@
 import init.lge.usb.rc
 
 on early-init
-   mount debugfs debugfs /sys/kernel/debug
-   chmod 666 /proc/cmdline
-   write /sys/block/mmcblk0/queue/scheduler noop
-   write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor performance
-   symlink /data/tombstones /tombstones
+    mount debugfs debugfs /sys/kernel/debug
+    chmod 666 /proc/cmdline
+    write /sys/block/mmcblk0/queue/scheduler noop
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor performance
+    symlink /data/tombstones /tombstones
 
 on init
-
-    # See storage config details at http://source.android.com/tech/storage/
-    mkdir /mnt/shell/emulated 0700 shell shell
-    mkdir /storage/emulated 0555 root root
-    mkdir /storage/emulated/legacy 0555 root root
-    mkdir /mnt/media_rw/sdcard1 0555 root root
-    mkdir /mnt/media_rw/usbdisk 0555 root root
-    mkdir /storage/sdcard1 0775 system system
-    mkdir /storage/usbdisk 0775 system system
-
-    export EXTERNAL_STORAGE /storage/emulated/legacy
-    export SECONDARY_STORAGE /storage/sdcard1
-    export EMULATED_STORAGE_SOURCE /mnt/shell/emulated
-    export EMULATED_STORAGE_TARGET /storage/emulated
-
-     # Support legacy paths
-    symlink /storage/emulated/legacy /sdcard
-    symlink /storage/emulated/legacy /mnt/sdcard
-    symlink /storage/emulated/legacy /storage/sdcard0
-    symlink /storage/sdcard1         /external_sd
-    symlink /storage/sdcard1         /mnt/external_sd
-    symlink /storage/usbdisk         /usbdisk
-    symlink /storage/usbdisk         /mnt/usbdisk
-
-   exec /sbin/setup_fs \
-	/dev/block/platform/msm_sdcc.3/by-num/p20 \
-	/dev/block/platform/msm_sdcc.3/by-num/p16 \
-	/dev/block/platform/msm_sdcc.3/by-num/p18 \
-	/dev/block/platform/msm_sdcc.3/by-num/p23 \
-	no_reboot
-
-# Backward compatibility
-    symlink /system/bin /bin
-
-# Torch perms
-    chown system camera /sys/devices/platform/i2c-gpio.3/i2c-3/3-0030/brightness_uA
-    chmod 0777          /sys/devices/platform/i2c-gpio.3/i2c-3/3-0030/brightness_uA
-
-on fs
-
     mkdir /persist 0771 system system
     mkdir /persist-lg  0771 system system
     mkdir /mpt 0771 system system
 
-    wait /dev/block/platform/msm_sdcc.3/by-num/p15
-    exec /system/bin/e2fsck -fy /dev/block/platform/msm_sdcc.3/by-num/p15
-    mount ext4 /dev/block/platform/msm_sdcc.3/by-num/p15 /persist nosuid nodev barrier=1
+    mkdir /storage/sdcard1 0700 root root
+    mkdir /mnt/media_rw/sdcard1 0700 media_rw media_rw
+    mkdir /mnt/shell/emulated 0700 shell shell
+    mkdir /storage/emulated 0555 root root
 
-    wait /dev/block/platform/msm_sdcc.3/by-num/p16
-    exec /system/bin/e2fsck -fy /dev/block/platform/msm_sdcc.3/by-num/p16
-    mount ext4 /dev/block/platform/msm_sdcc.3/by-num/p16 /cache nosuid nodev barrier=1
-    
-    wait /dev/block/platform/msm_sdcc.3/by-num/p18
-    exec /system/bin/e2fsck -fy /dev/block/platform/msm_sdcc.3/by-num/p18
-    mount ext4 /dev/block/platform/msm_sdcc.3/by-num/p18 /persist-lg nosuid nodev barrier=1
+    export EXTERNAL_STORAGE /storage/emulated/legacy
+    export EMULATED_STORAGE_SOURCE /mnt/shell/emulated
+    export EMULATED_STORAGE_TARGET /storage/emulated
+    export SECONDARY_STORAGE /storage/sdcard1
 
-    wait /dev/block/platform/msm_sdcc.3/by-num/p23
-    exec /system/bin/e2fsck -fy /dev/block/platform/msm_sdcc.3/by-num/p23
-    mount ext4 /dev/block/platform/msm_sdcc.3/by-num/p23 /mpt nosuid nodev barrier=1
+    # Support legacy paths
+    symlink /storage/emulated/legacy /sdcard
+    symlink /storage/emulated/legacy /mnt/sdcard
+    symlink /storage/emulated/legacy /storage/sdcard0
+    symlink /mnt/shell/emulated/0 /storage/emulated/legacy
+    symlink /storage/sdcard1 /extSdCard
+    symlink /storage/sdcard1 /mnt/extSdCard
 
-    setprop ro.crypto.fuse_sdcard true
+    # Torch perms
+    chown system camera /sys/devices/platform/i2c-gpio.3/i2c-3/3-0030/brightness_uA
+    chmod 0777 /sys/devices/platform/i2c-gpio.3/i2c-3/3-0030/brightness_uA
+
+on fs
+    mount_all fstab.lge
 
 on post-fs-data
     mkdir /data/radio 0770 radio radio
@@ -109,12 +76,12 @@ on post-fs-data
     chmod 0664 /sys/devices/platform/msm_sdcc.2/polling
     chmod 0664 /sys/devices/platform/msm_sdcc.3/polling
     chmod 0664 /sys/devices/platform/msm_sdcc.4/polling
+
     # Chown polling nodes as needed from UI running on system server
     chown system system /sys/devices/platform/msm_sdcc.1/polling
     chown system system /sys/devices/platform/msm_sdcc.2/polling
     chown system system /sys/devices/platform/msm_sdcc.3/polling
     chown system system /sys/devices/platform/msm_sdcc.4/polling
-
 
     chmod 0664 /sys/devices/platform/msm-battery/chg_current_change
     chown system system /sys/devices/platform/msm-battery/chg_current_change
@@ -139,9 +106,6 @@ on post-fs-data
     # Create /data/time folder for time-services
     mkdir /data/time/ 0700 system system
     mkdir /data/fpri 0777 system system
-    copy /proc/last_kmsg /data/dontpanic/last_kmsg
-    chown root log /data/dontpanic/last_kmsg
-    chmod 0640 /data/dontpanic/last_kmsg
 
     mkdir /data/audio/ 0770 media audio
 
@@ -154,19 +118,11 @@ on post-fs-data
     mkdir /data/wpstiles/ 0755 shell
     mkdir /data/wiper 0755 location qcom_oncrpc
 
-     # Create directories for gpsone_daemon services
+    # Create directories for gpsone_daemon services
     mkdir /data/misc/gpsone_d 0770 gpsone_d qcom_oncrpc
 
-     # Create directory from IMS services
+    # Create directory from IMS services
     mkdir /data/shared 0755
-
-    #Create directory for FOTA
-    mkdir /data/fota 0771
-    chown system system /data/fota
-
-    copy /proc/last_kmsg /data/dontpanic/last_kmsg
-    chown root log /data/dontpanic/last_kmsg
-    chmod 0640 /data/dontpanic/last_kmsg
 
     # Dummy file, to keep the API happy. The default firmware does both modes
     write /data/misc/wifi/fwpath ""
@@ -269,13 +225,10 @@ on boot
     chmod 0664 /sys/class/leds/lcd-backlight/alc
     chown system system /sys/class/leds/lcd-backlight/alc
     chmod 0664 /sys/class/leds/lcd-backlight/brightness
+
     # rmt-storage
     chown system system /sys/devices/platform/rs300000a7.65536/send_sync
     chmod 0764 /sys/devices/platform/rs300000a7.65536/send_sync
-
-    #write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor ondemand
-    #write /sys/devices/system/cpu/cpufreq/ondemand/up_threshold 90
-    #write /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq 245760
 
     #chown system system /sys/devices/system/cpu/cpufreq/ondemand/sampling_rate
     chown system /sys/devices/platform/rs300000a7.65536/force_sync
@@ -308,28 +261,12 @@ service qcamerasvr /system/bin/mm-qcamera-daemon
     user camera
     group camera system inet audio
 
-service sdcard /system/bin/sdcard -u 1023 -g 1023 -l /data/media /mnt/shell/emulated
+service fuse_sdcard /system/bin/sdcard -u 1023 -g 1023 -l /data/media /mnt/shell/emulated
     class late_start
-    disabled
 
 service fuse_sdcard1 /system/bin/sdcard -u 1023 -g 1023 -d /mnt/media_rw/sdcard1 /storage/sdcard1
      class late_start
      disabled
-
-on property:ro.fuse_sdcard=true
-    start sdcard
-
-# Binding fuse mount point to /storage/emulated/legacy
-on property:init.svc.sdcard=running
-    wait /mnt/shell/emulated/0
-    mount none /mnt/shell/emulated/0 /storage/emulated/legacy bind
-
-# This will make sure that sdcard service starts as late_start.
-on nonencrypted
-    setprop ro.fuse_sdcard ${persist.fuse_sdcard}
-
-on property:vold.decrypt=trigger_restart_framework
-    setprop ro.fuse_sdcard ${persist.fuse_sdcard}
 
 service rmt_storage /system/bin/rmt_storage
     class core
