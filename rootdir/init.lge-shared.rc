@@ -145,7 +145,7 @@ on post-fs-data
 
     mkdir /data/audio/ 0770 media audio
 
-# NFC
+    # NFC
     setprop ro.nfc.port "I2C"
     chmod 0600 /dev/pn544
     chown nfc nfc /dev/pn544
@@ -171,8 +171,6 @@ on post-fs-data
     # Dummy file, to keep the API happy. The default firmware does both modes
     write /data/misc/wifi/fwpath ""
     chmod 0666 /data/misc/wifi/fwpath
-
-    setprop vold.post_fs_data_done 1
 
 on boot
     write /proc/sys/vm/page-cluster 0
@@ -231,12 +229,8 @@ on boot
     mkdir /dev/socket/qmux_gps 0770 gps gps
     chmod 2770 /dev/socket/qmux_gps
 
-    setprop wifi.interface wlan0
-
     # Allow QMUX daemon to assign port open wait time
     chown radio radio /sys/devices/virtual/hsicctl/hsicctl0/modem_wait
-
-    setprop ro.telephony.call_ring.multiple false
 
     #To allow interfaces to get v6 address when tethering is enabled
     write /proc/sys/net/ipv6/conf/rmnet0/accept_ra 2
