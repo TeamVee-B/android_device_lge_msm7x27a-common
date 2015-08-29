@@ -36,24 +36,6 @@ case "$basebandcheck" in
 	"" | "V10") setprop gsm.version.baseband `strings /dev/block/mmcblk0p12 | grep -e "-V10.-" -e "-V20.-" | head -1` ;;
 esac
 
-# Get device based on baseband
-deviceset=`getprop gsm.version.baseband | grep -o -e "E610" -e "E612" -e "E617" -e "P700" -e "P705" | head -1`
-
-# ReMount /system to Read-Write
-mount -o rw,remount /system
-
-# Set Variant in build.prop
-case "$deviceset" in
-	"E610") busybox sed -i '/ro.product.model=L5/c\ro.product.model=E610 (L5 Single NFC)' system/build.prop ;;
-	"E612") busybox sed -i '/ro.product.model=L5/c\ro.product.model=E612 (L5 Single)' system/build.prop ;;
-	"E617") busybox sed -i '/ro.product.model=L5/c\ro.product.model=E617 (L5 Single)' system/build.prop ;;
-	"P700") busybox sed -i '/ro.product.model=L7/c\ro.product.model=P700 (L7 Single NFC)' system/build.prop ;;
-	"P705") busybox sed -i '/ro.product.model=L7/c\ro.product.model=P705 (L7 Single)' system/build.prop ;;
-esac
-
-# ReMount /system to Read-Only
-mount -o ro,remount /system
-
 # Set essential configs
 echo `getprop ro.serialno` > /sys/class/android_usb/android0/iSerial
 echo `getprop ro.product.manufacturer` > /sys/class/android_usb/android0/iManufacturer
